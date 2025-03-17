@@ -38,13 +38,19 @@ Serve the dashboard
 kubectl port-forward service/argocd-server -n argocd 8080:443
 ```
 
+Change the default reconciliation timer
+```sh
+kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data":{"timeout.reconciliation":"5s"}}'
+kubectl rollout restart -n argocd statefulset argocd-application-controller
+```
+
 Create the `Application`
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: capi-demo
-  namespace: default
+  namespace: argocd
 spec:
   destination:
     server: https://kubernetes.default.svc
