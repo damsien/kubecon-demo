@@ -68,6 +68,7 @@ spec:
 ### 4. Install & configure Syngit
 
 ```sh
+helm repo add syngit https://syngit-org.github.io/syngit --force-update
 helm install syngit syngit/syngit -n syngit \
   --create-namespace \
   --set providers.gitlab.enabled="true" \
@@ -114,18 +115,23 @@ spec:
       operations: ["CREATE", "UPDATE","DELETE"]
 ```
 
-### 5. Create the ClusterResourceSet for Cilium
+### 5. Install CAPI
+
+```sh
+export CLUSTER_TOPOLOGY=true
+clusterctl init --infrastructure docker
+```
+
+### 6. Create the ClusterResourceSet for Cilium
 
 ```sh
 kubectl create configmap cilium-crs-cm --from-file=cilium-1.17.1.yaml
 kubectl apply -f cilium-crs.yaml
 ```
 
-### 6. Install CAPI & generate docker cluster manifests
+### 7. Generate docker cluster manifests
 
 ```sh
-export CLUSTER_TOPOLOGY=true
-clusterctl init --infrastructure docker
 clusterctl generate cluster my-cluster --flavor development \
   --kubernetes-version=v1.32.0 \
   --control-plane-machine-count=1 \
@@ -133,7 +139,7 @@ clusterctl generate cluster my-cluster --flavor development \
   > capi-docker-cluster.yaml
 ```
 
-### 4. Create the cluster
+### 8. Create the cluster
 
 ```sh
 kubectl apply -f capi-docker-cluster.yaml
