@@ -1,0 +1,7 @@
+apiVersion: kubecon.demo/v1alpha1
+kind: CustomCluster
+metadata:
+  name: my-cluster
+spec:
+  controlPlaneNumber: 1
+  workerNumber: 2

@@ -95,7 +95,6 @@ clusterctl generate cluster my-cluster --flavor development \
   > capi-docker-cluster.yaml
 ```
 
-
 ### 7. Install & configure Syngit
 
 ```sh
@@ -133,28 +132,54 @@ spec:
   - kind: ServiceAccount
     name: system:serviceaccount:capi-system:capi-manager
     namespace: capi-system
+  - kind: ServiceAccount
+    name: system:serviceaccount:crossplane-system:crossplane
+    namespace: crossplane-system
   defaultUnauthorizedUserMode: Block
   rootPath: capi
   excludedFields:
-    - spec.controlPlaneEndpoint.host
-    - spec.controlPlaneEndpoint.port
+    - metadata.finalizers
+    - spec.compositeDeletePolicy
+    - spec.compositionRef
+    - spec.compositionRef.name
+    - spec.compositionRevisionRef
+    - spec.resourceRef
+    - spec.compositionRevisionRef.name
+    - spec.resourceRef.apiVersion
+    - spec.resourceRef.name
+    - spec.resourceRef.kind
   scopedResources:
     rules:
-    - apiGroups: ["cluster.x-k8s.io"]
-      apiVersions: ["v1beta1"]
-      resources: ["clusters"]
+    - apiGroups: ["kubecon.demo"]
+      apiVersions: ["v1alpha1"]
+      resources: ["customclusters"]
       operations: ["CREATE", "UPDATE","DELETE"]
 ```
 
-### 8. Create the cluster
+### 8. Install Crossplane
 
 ```sh
-kubectl apply -f capi-docker-cluster.yaml
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm install crossplane \
+  --namespace crossplane-system \
+  --create-namespace crossplane-stable/crossplane
 ```
 
-OR
+Install the native Kubernetes provider
+
+```sh
+crossplane xpkg install provider xpkg.upbound.io/upbound/provider-kubernetes:v0.16.0
+```
+
+### 9. Create the CustomCluster composition
+
+```sh
+kubectl apply -f cluster-composition.yaml
+```
+
+### 10. Create the cluster
 
 ```sh
 kubectl apply -f capi-docker-cluster-infra.yaml
-kubeclt apply -f cluster-only.yaml
+kubectl apply -f custom-cluster.yaml
 ```
