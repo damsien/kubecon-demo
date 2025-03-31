@@ -1,0 +1,34 @@
+apiVersion: syngit.io/v1beta3
+kind: RemoteSyncer
+metadata:
+  name: capi-cluster-create-update-delete
+  annotations:
+    syngit.io/remotetarget.pattern.one-or-many-branches: main
+spec:
+  remoteRepository: <YOUR_REPOSITORY_URL>.git
+  defaultBranch: main
+  strategy: CommitApply
+  targetStrategy: OneTarget
+  bypassInterceptionSubjects:
+  - kind: ServiceAccount
+    name: system:serviceaccount:argocd:argocd-application-controller
+    namespace: argocd
+  - kind: ServiceAccount
+    name: system:serviceaccount:argocd:argocd-server
+    namespace: argocd
+  defaultUnauthorizedUserMode: Block
+  rootPath: capi
+  excludedFields:
+    - metadata.finalizers
+    - spec.compositeDeletePolicy
+    - metadata.labels[argocd.argoproj.io/instance]
+    - spec.compositionRef
+    - spec.compositionRef.name
+    - spec.compositionRevisionRef
+    - spec.compositionRevisionRef.name
+  scopedResources:
+    rules:
+    - apiGroups: ["kubecon.demo"]
+      apiVersions: ["v1alpha1"]
+      resources: ["customclusters"]
+      operations: ["CREATE", "UPDATE","DELETE"]

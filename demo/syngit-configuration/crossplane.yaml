@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-basic-auth-gitlab-crossplane
+type: kubernetes.io/basic-auth
+stringData:
+  username: crossplane-external-id-setter
+  password: <REPO_ACCESS_TOKEN>
+---
+apiVersion: syngit.io/v1beta3
+kind: RemoteUser
+metadata:
+  name: ru-crossplane-external-id
+  annotations:
+    gitlab.syngit.io/auth.test: "true"
+spec:
+  gitBaseDomainFQDN: <GIT_FQDN>
+  email: <SAMPLE_EMAIL>
+  secretRef:
+    name: secret-basic-auth-gitlab-crossplane
+---
+apiVersion: syngit.io/v1beta3
+kind: RemoteUserBinding
+metadata:
+  name: rub-crossplane-external-id
+spec:
+  subject:
+    kind: ServiceAccount
+    name: system:serviceaccount:crossplane-system:crossplane
+  remoteUserRefs:
+    - name: ru-crossplane-external-id
+  remoteTargetRefs:
+    - name: rt-crossplane-external-id
+---
+apiVersion: syngit.io/v1beta3
+kind: RemoteTarget
+metadata:
+  name: rt-crossplane-external-id
+spec:
+  upstreamRepository: <YOUR_REPOSITORY_URL>.git
+  upstreamBranch: main
+  targetRepository: <YOUR_REPOSITORY_URL>.git
+  targetBranch: main

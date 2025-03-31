@@ -20,7 +20,33 @@ helm install \
   --set crds.enabled=true
 ```
 
-### 3. Install & configure ArgoCD
+### 3. Install & configure CAPI
+
+```sh
+export CLUSTER_TOPOLOGY=true
+clusterctl init --infrastructure docker
+kubectl create configmap cilium-crs-cm --from-file=cilium-1.17.1.yaml
+sleep 10
+kubectl apply -f cilium-crs.yaml
+```
+
+### 4. Install & configure Crossplane
+
+```sh
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm install crossplane \
+  --namespace crossplane-system \
+  --create-namespace crossplane-stable/crossplane \
+  --set provider.packages='{xpkg.upbound.io/upbound/provider-kubernetes:v0.16.0}'
+```
+
+Create the CustomCluster composition
+
+```sh
+kubectl apply -f cluster-composition.yaml
+```
+
+### 5. Install & configure ArgoCD
 
 ```sh
 helm repo add argo https://argoproj.github.io/argo-helm
@@ -38,9 +64,17 @@ Serve the dashboard
 kubectl port-forward service/argocd-server -n argocd 8080:443
 ```
 
-Change the default reconciliation timer
+Change the default reconciliation timer and exclude the XCustomCluster for being discovered
 ```sh
 kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data":{"timeout.reconciliation":"5s"}}'
+kubectl patch configmap argocd-cm -n argocd --type merge -p '
+data:
+  resource.exclusions: |
+    - apiGroups:
+      - "kubecon.demo"
+      kinds:
+      - "XCustomCluster"
+'
 kubectl rollout restart -n argocd statefulset argocd-application-controller
 ```
 
@@ -66,36 +100,10 @@ spec:
     automated:
       allowEmpty: true
       prune: true
-      selfHeal: true
-    syncOptions:
-    - PrunePropagationPolicy=background
+      selfHeal: false
 ```
 
-### 4. Install CAPI
-
-```sh
-export CLUSTER_TOPOLOGY=true
-clusterctl init --infrastructure docker
-```
-
-### 5. Create the ClusterResourceSet for Cilium
-
-```sh
-kubectl create configmap cilium-crs-cm --from-file=cilium-1.17.1.yaml
-kubectl apply -f cilium-crs.yaml
-```
-
-### 6. Generate docker cluster manifests
-
-```sh
-clusterctl generate cluster my-cluster --flavor development \
-  --kubernetes-version=v1.32.0 \
-  --control-plane-machine-count=1 \
-  --worker-machine-count=3 \
-  > capi-docker-cluster.yaml
-```
-
-### 7. Install & configure Syngit
+### 6. Install & configure Syngit
 
 ```sh
 helm repo add syngit https://syngit-org.github.io/syngit --force-update
@@ -106,78 +114,13 @@ helm install syngit syngit/syngit -n syngit \
   --set controller.replicas="1"
 ```
 
-Create the `Secret` and the `RemoteUser`.
+Create the `Secret` and the `RemoteUser` for **your** user (based on `syngit-configuration/user.yaml`).
 
-Create the `RemoteSyncer`
+Create the `Secret`, the `RemoteUser`, the `RemoteTarget` and the `RemoteUserBinding` for the crossplane ServiceAccount (based on `syngit-configuration/crossplane.yaml`).
 
-```yaml
-apiVersion: syngit.io/v1beta3
-kind: RemoteSyncer
-metadata:
-  name: capi-cluster-create-update-delete
-  annotations:
-    syngit.io/remotetarget.pattern.one-or-many-branches: main
-spec:
-  remoteRepository: <REPO_URL>
-  defaultBranch: main
-  strategy: CommitApply
-  targetStrategy: OneTarget
-  bypassInterceptionSubjects:
-  - kind: ServiceAccount
-    name: system:serviceaccount:argocd:argocd-application-controller
-    namespace: argocd
-  - kind: ServiceAccount
-    name: system:serviceaccount:argocd:argocd-server
-    namespace: argocd
-  - kind: ServiceAccount
-    name: system:serviceaccount:capi-system:capi-manager
-    namespace: capi-system
-  - kind: ServiceAccount
-    name: system:serviceaccount:crossplane-system:crossplane
-    namespace: crossplane-system
-  defaultUnauthorizedUserMode: Block
-  rootPath: capi
-  excludedFields:
-    - metadata.finalizers
-    - spec.compositeDeletePolicy
-    - spec.compositionRef
-    - spec.compositionRef.name
-    - spec.compositionRevisionRef
-    - spec.resourceRef
-    - spec.compositionRevisionRef.name
-    - spec.resourceRef.apiVersion
-    - spec.resourceRef.name
-    - spec.resourceRef.kind
-  scopedResources:
-    rules:
-    - apiGroups: ["kubecon.demo"]
-      apiVersions: ["v1alpha1"]
-      resources: ["customclusters"]
-      operations: ["CREATE", "UPDATE","DELETE"]
-```
+Create the `RemoteSyncer` (based on `syngit-configuration/remotesyncer.yaml`).
 
-### 8. Install Crossplane
-
-```sh
-helm repo add crossplane-stable https://charts.crossplane.io/stable
-helm install crossplane \
-  --namespace crossplane-system \
-  --create-namespace crossplane-stable/crossplane
-```
-
-Install the native Kubernetes provider
-
-```sh
-crossplane xpkg install provider xpkg.upbound.io/upbound/provider-kubernetes:v0.16.0
-```
-
-### 9. Create the CustomCluster composition
-
-```sh
-kubectl apply -f cluster-composition.yaml
-```
-
-### 10. Create the cluster
+### 7. Create the cluster
 
 ```sh
 kubectl apply -f capi-docker-cluster-infra.yaml
