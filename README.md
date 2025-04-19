@@ -66,7 +66,6 @@ kubectl port-forward service/argocd-server -n argocd 8080:443
 
 Change the default reconciliation timer and exclude the XCustomCluster for being discovered
 ```sh
-kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data":{"timeout.reconciliation":"5s"}}'
 kubectl patch configmap argocd-cm -n argocd --type merge -p '
 data:
   resource.exclusions: |
