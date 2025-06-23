@@ -1,0 +1,36 @@
+apiVersion: syngit.io/v1beta3
+kind: RemoteSyncer
+metadata:
+  name: deployment-cluster-create-update-delete
+spec:
+  remoteRepository: github.com/damsien/test-syngit.git
+  defaultBranch: main
+  strategy: CommitApply
+  targetStrategy: OneTarget
+  bypassInterceptionSubjects:
+  - kind: ServiceAccount
+    name: system:serviceaccount:argocd:argocd-application-controller
+    namespace: argocd
+  - kind: ServiceAccount
+    name: system:serviceaccount:argocd:argocd-server
+    namespace: argocd
+  defaultUnauthorizedUserMode: Block
+  rootPath: deployment
+  excludedFields:
+    - spec.progressDeadlineSeconds
+    - spec.revisionHistoryLimit
+    - spec.strategy
+    - spec.template.spec.dnsPolicy
+    - spec.template.spec.restartPolicy
+    - spec.template.spec.schedulerName
+    - spec.template.spec.securityContext
+    - spec.template.spec.terminationGracePeriodSeconds
+    - spec.template.spec[0].terminationMessagePath
+    - spec.template.spec[0].terminationMessagePolicy
+    - spec.template.spec[0].resources
+  scopedResources:
+    rules:
+    - apiGroups: ["apps"]
+      apiVersions: ["v1"]
+      resources: ["deployments"]
+      operations: ["CREATE", "UPDATE","DELETE"]

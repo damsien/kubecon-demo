@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-kubernetes-admin
+type: kubernetes.io/basic-auth
+stringData:
+  username: <USERNAME>
+  password: <YOUR_GIT_PERSONAL_ACCESS_TOKEN>
+---
+apiVersion: syngit.io/v1beta3
+kind: RemoteUser
+metadata:
+  name: remoteuser-kubernetes-admin
+spec:
+  gitBaseDomainFQDN: github.com
+  email: <TO_BE_FILLED>
+  secretRef:
+    name: secret-kubernetes-admin

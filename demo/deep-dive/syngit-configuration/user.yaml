@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-a
+type: kubernetes.io/basic-auth
+stringData:
+  username: <YOUR_GIT_USERNAME>
+  password: <YOUR_GIT_PERSONAL_ACCESS_TOKEN>
+---
+apiVersion: syngit.io/v1beta3
+kind: RemoteUser
+metadata:
+  name: remoteuser-a
+  annotations:
+    syngit.io/remoteuserbinding.managed: "true"
+spec:
+  gitBaseDomainFQDN: github.com
+  email: <YOUR_EMAIL>
+  secretRef:
+    name: secret-a
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-b
+type: kubernetes.io/basic-auth
+stringData:
+  username: <YOUR_GIT_USERNAME>
+  password: <YOUR_GIT_PERSONAL_ACCESS_TOKEN>
+---
+apiVersion: syngit.io/v1beta3
+kind: RemoteUser
+metadata:
+  name: remoteuser-b
+  annotations:
+    syngit.io/remoteuserbinding.managed: "true"
+spec:
+  gitBaseDomainFQDN: github.com
+  email: <YOUR_EMAIL>
+  secretRef:
+    name: secret-b

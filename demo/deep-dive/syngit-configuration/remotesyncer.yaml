@@ -3,12 +3,35 @@ kind: RemoteSyncer
 metadata:
   name: capi-cluster-create-update-delete
   annotations:
+  
     syngit.io/remotetarget.pattern.one-or-many-branches: main
+    syngit.io/remotetarget.pattern.user-specific: one-user-one-branch
 spec:
-  remoteRepository: <YOUR_REPOSITORY_URL>.git
+
+
+  remoteRepository: github.com/damsien/test-syngit.git
   defaultBranch: main
+
+
   strategy: CommitApply
-  targetStrategy: OneTarget
+  targetStrategy: MultipleTarget
+
+
+  scopedResources:
+    rules:
+    - apiGroups: ["cluster.x-k8s.io"]
+      apiVersions: ["v1beta1"]
+      resources: ["clusters"]
+      operations: ["CREATE", "UPDATE","DELETE"]
+
+
+  defaultUnauthorizedUserMode: Block
+  rootPath: capi
+  excludedFields:
+    - spec.controlPlaneEndpoint.host
+    - spec.controlPlaneEndpoint.port
+
+
   bypassInterceptionSubjects:
   - kind: ServiceAccount
     name: system:serviceaccount:argocd:argocd-application-controller
@@ -19,14 +42,3 @@ spec:
   - kind: ServiceAccount
     name: system:serviceaccount:capi-system:capi-manager
     namespace: capi-system
-  defaultUnauthorizedUserMode: Block
-  rootPath: capi
-  excludedFields:
-    - spec.controlPlaneEndpoint.host
-    - spec.controlPlaneEndpoint.port
-  scopedResources:
-    rules:
-    - apiGroups: ["cluster.x-k8s.io"]
-      apiVersions: ["v1beta1"]
-      resources: ["clusters"]
-      operations: ["CREATE", "UPDATE","DELETE"]

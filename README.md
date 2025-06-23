@@ -1,6 +1,4 @@
-## Procedure
-
-All the procedure has to be done in the `demo` directory.
+## Installation
 
 ### 1. Create the managament cluster
 
@@ -20,7 +18,44 @@ helm install \
   --set crds.enabled=true
 ```
 
-### 3. Install & configure CAPI
+### 3. Install syngit
+
+```sh
+helm repo add syngit https://syngit-org.github.io/syngit --force-update
+helm install syngit syngit/syngit -n syngit \
+  --create-namespace \
+  --set providers.gitlab.enabled="true" \
+  --set providers.github.enabled="true" \
+  --set controller.replicas="1"
+```
+
+## Basic - Procedure
+
+All of the basic procedure is located under the `basic/` folder.
+
+### 1. Create the `RemoteUser`
+
+Fill the `Secret` and the mail.
+
+`kubectl apply -f user.yaml`
+
+### 2. Create the syngit resources
+
+```sh
+kubectl apply -f remotetarget.yaml
+kubectl apply -f remoteuserbinding.yaml
+kubectl apply -f remotesyncer.yaml
+```
+
+### 3. Create the deployment
+
+`kubectl create deploy test --image=nginx`
+
+## Deep dive - Procedure
+
+All the procedure has to be done in the `demo` directory.
+
+### 1. Install & configure CAPI
 
 ```sh
 export CLUSTER_TOPOLOGY=true
@@ -30,7 +65,7 @@ sleep 10
 kubectl apply -f cilium-crs.yaml
 ```
 
-### 4. Install & configure ArgoCD
+### 2. Install & configure ArgoCD
 
 ```sh
 helm repo add argo https://argoproj.github.io/argo-helm
@@ -81,22 +116,13 @@ spec:
     - PrunePropagationPolicy=background
 ```
 
-### 5. Install & configure Syngit
-
-```sh
-helm repo add syngit https://syngit-org.github.io/syngit --force-update
-helm install syngit syngit/syngit -n syngit \
-  --create-namespace \
-  --set providers.gitlab.enabled="true" \
-  --set providers.github.enabled="true" \
-  --set controller.replicas="1"
-```
+### 3. Configure Syngit
 
 Create the `Secret` and the `RemoteUser` for **your** user (based on `syngit-configuration/user.yaml`).
 
 Create the `RemoteSyncer` (based on `syngit-configuration/remotesyncer.yaml`).
 
-### 8. Create the cluster
+### 4. Create the cluster
 
 ```sh
 kubectl apply -f capi-docker-cluster-infra.yaml

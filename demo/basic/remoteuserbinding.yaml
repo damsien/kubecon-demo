@@ -1,0 +1,12 @@
+apiVersion: syngit.io/v1beta3
+kind: RemoteUserBinding
+metadata:
+  name: remoteuserbinding-sample
+spec:
+  subject:
+    kind: User
+    name: kubernetes-admin
+  remoteUserRefs:
+    - name: remoteuser-kubernetes-admin
+  remoteTargetRefs:
+    - name: remotetarget-demo-main
