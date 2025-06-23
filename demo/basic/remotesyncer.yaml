@@ -3,7 +3,7 @@ kind: RemoteSyncer
 metadata:
   name: deployment-cluster-create-update-delete
 spec:
-  remoteRepository: github.com/damsien/test-syngit.git
+  remoteRepository: https://github.com/damsien/test-syngit.git
   defaultBranch: main
   strategy: CommitApply
   targetStrategy: OneTarget

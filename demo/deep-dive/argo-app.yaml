@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: capi-demo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    directory:
+      jsonnet: {}
+      recurse: true
+    path: .
+    repoURL: <REPO_URL>
+    targetRevision: main
+  syncPolicy:
+    automated:
+      allowEmpty: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PrunePropagationPolicy=background

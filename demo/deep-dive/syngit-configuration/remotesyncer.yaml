@@ -9,7 +9,7 @@ metadata:
 spec:
 
 
-  remoteRepository: github.com/damsien/test-syngit.git
+  remoteRepository: https://github.com/damsien/test-syngit.git
   defaultBranch: main
 
 
@@ -28,8 +28,10 @@ spec:
   defaultUnauthorizedUserMode: Block
   rootPath: capi
   excludedFields:
-    - spec.controlPlaneEndpoint.host
-    - spec.controlPlaneEndpoint.port
+    - metadata.finalizers
+    - spec.controlPlaneEndpoint
+    - spec.controlPlaneRef
+    - spec.infrastructureRef
 
 
   bypassInterceptionSubjects:

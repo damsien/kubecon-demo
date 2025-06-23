@@ -3,8 +3,7 @@ kind: RemoteTarget
 metadata:
   name: remotetarget-demo-main
 spec:
-  upstreamRepository: github.com/damsien/test-syngit.git
+  upstreamRepository: https://github.com/damsien/test-syngit.git
   upstreamBranch: main
-  targetRepository: github.com/damsien/test-syngit.git
+  targetRepository: https://github.com/damsien/test-syngit.git
   targetBranch: main
-  mergeStrategy: TryFastForwardOrHardReset

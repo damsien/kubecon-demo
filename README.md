@@ -1,5 +1,7 @@
 ## Installation
 
+Go to the `demo/` subfolder.
+
 ### 1. Create the managament cluster
 
 ```sh
@@ -29,9 +31,43 @@ helm install syngit syngit/syngit -n syngit \
   --set controller.replicas="1"
 ```
 
+### 4. Install CAPI & configure CAPI
+
+```sh
+export CLUSTER_TOPOLOGY=true
+clusterctl init --infrastructure docker
+kubectl create configmap cilium-crs-cm --from-file=demo/deep-dive/cilium-1.17.1.yaml
+sleep 15
+```
+
+```sh
+kubectl apply -f demo/deep-dive/cilium-crs.yaml
+kubectl apply -f demo/deep-dive/capi-docker-cluster-infra.yaml
+```
+
+### 5. Install & configure ArgoCD
+
+```sh
+helm repo add argo https://argoproj.github.io/argo-helm
+kubectl create namespace argocd
+helm install argocd argo/argo-cd -n argocd --set crds.install=true
+```
+
+Get the argo-cd's secret
+```sh
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+Serve the dashboard
+```sh
+kubectl port-forward service/argocd-server -n argocd 8080:443
+```
+
+And connect your repo
+
 ## Basic - Procedure
 
-All of the basic procedure is located under the `basic/` folder.
+All of the basic procedure is located under the `demo/basic/` folder.
 
 ### 1. Create the `RemoteUser`
 
@@ -53,68 +89,7 @@ kubectl apply -f remotesyncer.yaml
 
 ## Deep dive - Procedure
 
-All the procedure has to be done in the `demo` directory.
-
-### 1. Install & configure CAPI
-
-```sh
-export CLUSTER_TOPOLOGY=true
-clusterctl init --infrastructure docker
-kubectl create configmap cilium-crs-cm --from-file=cilium-1.17.1.yaml
-sleep 10
-kubectl apply -f cilium-crs.yaml
-```
-
-### 2. Install & configure ArgoCD
-
-```sh
-helm repo add argo https://argoproj.github.io/argo-helm
-kubectl create namespace argocd
-helm install argocd argo/argo-cd -n argocd --set crds.install=true
-```
-
-Get the argo-cd's secret
-```sh
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-```
-
-Serve the dashboard
-```sh
-kubectl port-forward service/argocd-server -n argocd 8080:443
-```
-
-Change the default reconciliation timer
-```sh
-kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data":{"timeout.reconciliation":"5s"}}'
-kubectl rollout restart -n argocd statefulset argocd-application-controller
-```
-
-Create the `Application`
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: capi-demo
-  namespace: argocd
-spec:
-  destination:
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    directory:
-      jsonnet: {}
-      recurse: true
-    path: .
-    repoURL: <REPO_URL>
-    targetRevision: main
-  syncPolicy:
-    automated:
-      allowEmpty: true
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - PrunePropagationPolicy=background
-```
+All the procedure has to be done in the `demo/deep-dive/` directory.
 
 ### 3. Configure Syngit
 
@@ -122,9 +97,19 @@ Create the `Secret` and the `RemoteUser` for **your** user (based on `syngit-con
 
 Create the `RemoteSyncer` (based on `syngit-configuration/remotesyncer.yaml`).
 
+```sh
+kubectl apply -f syngit-configuration/rbac.yaml
+kubectl apply -f syngit-configuration/user-a.yaml --as user-a
+kubectl apply -f syngit-configuration/user-b.yaml --as user-b
+kubectl apply -f syngit-configuration/remotesyncer.yaml
+```
+
 ### 4. Create the cluster
 
 ```sh
-kubectl apply -f capi-docker-cluster-infra.yaml
-kubectl apply -f cluster-only.yaml
+kubectl apply -f cluster-only.yaml --as user-a
+```
+
+```sh
+kubectl apply -f cluster-only.yaml --as user-b
 ```

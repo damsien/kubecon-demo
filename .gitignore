@@ -1,2 +1,5 @@
 samples/
 capi-docker-cluster.yaml
+demo/basic/user.yaml
+demo/deep-dive/syngit-configuration/user-a.yaml
+demo/deep-dive/syngit-configuration/user-b.yaml
