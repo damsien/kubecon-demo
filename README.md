@@ -65,6 +65,23 @@ kubectl port-forward service/argocd-server -n argocd 8080:443
 
 And connect your repo
 
+### 6. Install headlamp
+
+```sh
+# first add our custom repo to your local helm repositories
+helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+
+# now you should be able to install headlamp via helm
+helm install headlamp headlamp/headlamp --namespace kube-system
+```
+
+```sh
+kubectl create token -n kube-system headlamp
+kubectl port-forward -n kube-system service/headlamp 8080:80
+```
+
+Go to `http://127.0.0.1:8080`
+
 ## Basic - Procedure
 
 All of the basic procedure is located under the `demo/basic/` folder.
