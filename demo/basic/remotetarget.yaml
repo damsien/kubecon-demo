@@ -1,4 +1,4 @@
-apiVersion: syngit.io/v1beta3
+apiVersion: syngit.io/v1beta4
 kind: RemoteTarget
 metadata:
   name: remotetarget-demo-main

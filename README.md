@@ -16,7 +16,7 @@ helm install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
-  --version v1.17.0 \
+  --version v1.19.2 \
   --set crds.enabled=true
 ```
 
@@ -60,7 +60,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 Serve the dashboard
 ```sh
-kubectl port-forward service/argocd-server -n argocd 8080:443
+kubectl port-forward service/argocd-server -n argocd 8081:443
 ```
 
 And connect your repo
