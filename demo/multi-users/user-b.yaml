@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-b
+type: kubernetes.io/basic-auth
+stringData:
+  username: <USERNAME_TO_BE_COMPLETED>
+  password: <TOKEN_TO_BE_COMPLETED>
+---
+apiVersion: syngit.io/v1beta4
+kind: RemoteUser
+metadata:
+  name: remoteuser-b
+  annotations:
+    syngit.io/remoteuserbinding.managed: "true"
+spec:
+  gitBaseDomainFQDN: github.com
+  email: <MAIL_TO_BE_COMPLETED>
+  secretRef:
+    name: secret-b

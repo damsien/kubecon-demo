@@ -5,7 +5,7 @@ Go to the `demo/` subfolder.
 ### 1. Create the managament cluster
 
 ```sh
-kind create cluster --name management-cluster --config kind-workload-cluster-config.yaml
+kind create cluster --name demo-cluster
 ```
 
 ### 2. Install cert-manager
@@ -31,21 +31,7 @@ helm install syngit syngit/syngit -n syngit \
   --set controller.replicas="1"
 ```
 
-### 4. Install CAPI & configure CAPI
-
-```sh
-export CLUSTER_TOPOLOGY=true
-clusterctl init --infrastructure docker
-kubectl create configmap cilium-crs-cm --from-file=demo/deep-dive/cilium-1.17.1.yaml
-sleep 15
-```
-
-```sh
-kubectl apply -f demo/deep-dive/cilium-crs.yaml
-kubectl apply -f demo/deep-dive/capi-docker-cluster-infra.yaml
-```
-
-### 5. Install & configure ArgoCD
+### 4. Install & configure ArgoCD
 
 ```sh
 helm repo add argo https://argoproj.github.io/argo-helm
@@ -65,7 +51,7 @@ kubectl port-forward service/argocd-server -n argocd 8081:443
 
 And connect your repo
 
-### 6. Install headlamp
+### 5. Install headlamp
 
 ```sh
 # first add our custom repo to your local helm repositories
@@ -104,29 +90,17 @@ kubectl apply -f remotesyncer.yaml
 
 `kubectl create deploy test --image=nginx`
 
-## Deep dive - Procedure
+## Multi-users - Procedure
 
-All the procedure has to be done in the `demo/deep-dive/` directory.
+All the procedure has to be done in the `demo/multi-users` directory.
 
-### 3. Configure Syngit
-
-Create the `Secret` and the `RemoteUser` for **your** user (based on `syngit-configuration/user.yaml`).
-
-Create the `RemoteSyncer` (based on `syngit-configuration/remotesyncer.yaml`).
+Fill the `Secret` and the mail in `user-a.yaml` & `user-b.yaml`.
 
 ```sh
-kubectl apply -f syngit-configuration/rbac.yaml
-kubectl apply -f syngit-configuration/user-a.yaml --as user-a
-kubectl apply -f syngit-configuration/user-b.yaml --as user-b
-kubectl apply -f syngit-configuration/remotesyncer.yaml
+kubectl apply -f rbac.yaml
+kubectl apply -f user-a.yaml --as user-a
+kubectl apply -f user-b.yaml --as user-b
+kubectl apply -f remotesyncer.yaml
 ```
 
-### 4. Create the cluster
-
-```sh
-kubectl apply -f cluster-only.yaml --as user-a
-```
-
-```sh
-kubectl apply -f cluster-only.yaml --as user-b
-```
+`kubectl create deploy test --image=nginx --as user-a`

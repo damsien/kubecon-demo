@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: syngit-base-permissions
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "update", "patch", "get", "watch", "list", "delete"]
+- apiGroups: ["syngit.io"]
+  resources: ["remoteusers"]
+  verbs: ["create", "update", "patch", "get", "watch", "list", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/scale"]
+  verbs: ["create", "update", "patch", "get", "watch", "list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: syngit-base-permissions
+  namespace: default
+subjects:
+- kind: User
+  name: user-a
+  apiGroup: rbac.authorization.k8s.io
+- kind: User
+  name: user-b
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: syngit-base-permissions
+  apiGroup: rbac.authorization.k8s.io

@@ -1,7 +1,11 @@
 apiVersion: syngit.io/v1beta4
 kind: RemoteSyncer
 metadata:
-  name: deployment-cluster-create-update-delete
+  name: deployment-create-update-delete
+  annotations:
+  
+    syngit.io/remotetarget.pattern.one-or-many-branches: main
+    # syngit.io/remotetarget.pattern.user-specific: one-user-one-branch
 spec:
 
   scopedResources:
@@ -10,12 +14,15 @@ spec:
       apiVersions: ["v1"]
       resources: ["deployments"]
       operations: ["CREATE", "UPDATE","DELETE"]
-      
+
+
   remoteRepository: <YOUR_REPO>
   defaultBranch: main
 
+
   strategy: CommitApply
-  targetStrategy: OneTarget
+  targetStrategy: MultipleTarget
+
 
   bypassInterceptionSubjects:
   - kind: ServiceAccount
@@ -26,6 +33,7 @@ spec:
     namespace: argocd
   defaultUnauthorizedUserMode: Block
 
+  
   excludedFields:
     - metadata.annotations
     - spec.progressDeadlineSeconds
